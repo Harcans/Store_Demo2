@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owner Login — TechZone</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header><h1>🔐 Owner Login</h1><p>Only the store owner can access this</p></header>
+<div class="login-box">
+  <input id="user" placeholder="Username" autocomplete="username">
+  <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="buy" onclick="doLogin()">Log in</button>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+async function doLogin() {
+  const res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("user").value,
+      password: document.getElementById("pass").value
+    })
+  });
+  if (res.ok) { window.location = "/admin"; }
+  else {
+    const data = await res.json();
+    document.getElementById("msg").textContent = data.error;
+  }
+}
+</script>
+</body>
+</html>

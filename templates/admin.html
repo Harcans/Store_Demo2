@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — TechZone</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>⚙️ Admin Panel</h1>
+  <p>Manage your inventory</p>
+  <a class="admin-link" href="/logout">🚪 Log out</a>
+</header>
+
+<div class="login-box">
+  <h3>Add a new product</h3>
+  <input id="name" placeholder="Product name (e.g. Gaming Mouse)">
+  <input id="price" type="number" step="0.01" placeholder="Price (e.g. 29.99)">
+  <input id="stock" type="number" placeholder="Initial stock (e.g. 10)">
+  <input id="emoji" placeholder="Emoji (e.g. 🖱️)">
+  <button class="buy" onclick="addProduct()">+ Add product</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<main id="grid" class="grid"></main>
+<script>
+async function loadProducts() {
+  const res = await fetch("/api/products");
+  const products = await res.json();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  products.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="emoji">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <div class="price">$${p.price.toFixed(2)}</div>
+      <span class="badge ${p.stock === 0 ? "out" : p.stock < 6 ? "low" : "in"}">Stock: ${p.stock}</span><br>
+      <button class="restock" onclick="restock(${p.id}, 5)">+5</button>
+      <button class="restock" onclick="restock(${p.id}, 20)">+20</button>`;
+    grid.appendChild(card);
+  });
+}
+
+async function addProduct() {
+  const res = await fetch("/api/add_product", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: document.getElementById("name").value,
+      price: parseFloat(document.getElementById("price").value),
+      stock: parseInt(document.getElementById("stock").value),
+      emoji: document.getElementById("emoji").value || "📦"
+    })
+  });
+  const data = await res.json();
+  document.getElementById("msg").textContent = res.ok ? "✅ " + data.message : "❌ " + data.error;
+  loadProducts();
+}
+
+async function restock(id, qty) {
+  await fetch("/api/restock", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, qty })
+  });
+  loadProducts();
+}
+
+loadProducts();
+</script>
+</body>
+</html>
